@@ -1,190 +1,818 @@
-import React, { useState, useMemo } from 'react';
-
-// Definición de tipos
-const Alimento = {
-  categoria: '',
-  nombre: '',
-  kcal: 0,
-  proteinas: 0,
-  hidratos: 0,
-  grasas: 0,
-  fibra: 0,
-  calcio: 0,
-  hierro: 0,
-  magnesio: 0,
-  potasio: 0,
-  vitamina_a: 0,
-  vitamina_c: 0,
-  vitamina_d: 0,
-  vitamina_e: 0,
-  folato: 0,
-  vitamina_b12: 0,
-  notas: ''
-};
-
-// Base de datos de alimentos
-const alimentos = [
-  {
-    categoria: "Carnes",
-    nombre: "Carne de Hamburguesa",
-    kcal: 240,
-    proteinas: 19.17,
-    hidratos: 0.5,
-    grasas: 18.33,
-    fibra: 0,
-    calcio: 22,
-    hierro: 2.7,
-    magnesio: 20,
-    potasio: 315,
-    vitamina_a: 0,
-    vitamina_c: 0,
-    vitamina_d: 0,
-    vitamina_e: 0.4,
-    folato: 8,
-    vitamina_b12: 2.5,
-    notas: ''
-  },
-  {
-    categoria: "Carnes",
-    nombre: "Entrecot de Ternera",
-    kcal: 250,
-    proteinas: 25,
-    hidratos: 0,
-    grasas: 16,
-    fibra: 0,
-    calcio: 20,
-    hierro: 2.9,
-    magnesio: 23,
-    potasio: 330,
-    vitamina_a: 0,
-    vitamina_c: 0,
-    vitamina_d: 0,
-    vitamina_e: 0.3,
-    folato: 9,
-    vitamina_b12: 2.8,
-    notas: ''
-  }
-];
-
-function BuscadorAlimentos() {
-  const [terminoBusqueda, setTerminoBusqueda] = useState('');
-  const [categoria, setCategoria] = useState('');
-  const [resultados, setResultados] = useState(alimentos);
-  const [ordenamiento, setOrdenamiento] = useState({ 
-    columna: null, 
-    direccion: 'asc' 
-  });
-
-  // Función de búsqueda
-  const buscarAlimentos = (terminoBusqueda, categoria, resultados) => {
-    return resultados.filter(alimento => 
-      (terminoBusqueda === '' || alimento.nombre.toLowerCase().includes(terminoBusqueda.toLowerCase())) &&
-      (categoria === '' || alimento.categoria.toLowerCase() === categoria.toLowerCase())
-    );
-  };
-
-  // Obtener categorías únicas
-  const categorias = Array.from(new Set(alimentos.map(a => a.categoria)));
-
-  // Función de ordenamiento
-  const resultadosOrdenados = useMemo(() => {
-    if (!ordenamiento.columna) return resultados;
-
-    return [...resultados].sort((a, b) => {
-      const valorA = a[ordenamiento.columna];
-      const valorB = b[ordenamiento.columna];
-
-      // Manejo de ordenamiento para strings
-      if (typeof valorA === 'string' && typeof valorB === 'string') {
-        return ordenamiento.direccion === 'asc'
-          ? valorA.localeCompare(valorB)
-          : valorB.localeCompare(valorA);
-      }
-
-      // Manejo de ordenamiento para números
-      if (typeof valorA === 'number' && typeof valorB === 'number') {
-        return ordenamiento.direccion === 'asc' 
-          ? valorA - valorB 
-          : valorB - valorA;
-      }
-
-      return 0;
-    });
-  }, [resultados, ordenamiento]);
-
-  // Función para manejar el ordenamiento
-  const handleOrdenar = (columna) => {
-    setOrdenamiento(prev => ({
-      columna,
-      direccion: prev.columna === columna && prev.direccion === 'asc' 
-        ? 'desc' 
-        : 'asc'
-    }));
-  };
-
-  const handleBuscar = () => {
-    const resultadosFiltrados = buscarAlimentos(terminoBusqueda, categoria, alimentos);
-    setResultados(resultadosFiltrados);
-  };
-
-  return (
-    React.createElement('div', { className: "container mx-auto p-4" },
-      React.createElement('h1', { className: "text-2xl font-bold mb-4" }, "Buscador de Alimentos"),
-      
-      React.createElement('div', { className: "flex space-x-2 mb-4" },
-        React.createElement('input', {
-          type: "text",
-          value: terminoBusqueda,
-          onChange: (e) => setTerminoBusqueda(e.target.value),
-          placeholder: "Buscar alimento",
-          className: "input input-bordered w-full max-w-xs"
-        }),
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Visualizador de Nutrientes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
         
-        React.createElement('select', {
-          value: categoria,
-          onChange: (e) => setCategoria(e.target.value),
-          className: "select select-bordered w-full max-w-xs"
-        },
-          React.createElement('option', { value: "" }, "Todas las categorías"),
-          categorias.map((cat, index) => 
-            React.createElement('option', { key: index, value: cat }, cat)
-          )
-        ),
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
         
-        React.createElement('button', {
-          onClick: handleBuscar,
-          className: "btn btn-primary"
-        }, "Buscar")
-      ),
+        h1 {
+            color: #2e7d32;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .search-box {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-width: 200px;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .category-section {
+            margin-bottom: 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .category-header {
+            background-color: #f5f5f5;
+            padding: 12px 15px;
+            cursor: pointer;
+            font-weight: bold;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .category-content {
+            display: none;
+            padding: 15px;
+            overflow-x: auto;
+        }
+        
+        .category-content.active {
+            display: block;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f8f8f8;
+            cursor: pointer;
+        }
+        
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .no-results {
+            padding: 20px;
+            text-align: center;
+            color: #666;
+        }
+        
+        .tab-container {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            margin-right: 5px;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            background-color: #f8f8f8;
+        }
+        
+        .tab.active {
+            background-color: white;
+            border-bottom: 2px solid white;
+            margin-bottom: -1px;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .search-box, select {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Visualizador de Nutrientes por Categoría</h1>
+        
+        <div class="controls">
+            <input type="text" id="searchBox" class="search-box" placeholder="Buscar alimentos...">
+            <select id="categorySelect">
+                <option value="">Todas las categorías</option>
+                <!-- Se cargarán dinámicamente -->
+            </select>
+            <button id="searchBtn">Buscar</button>
+        </div>
+        
+        <div id="content">
+            <!-- Aquí se mostrarán las categorías y sus alimentos -->
+        </div>
+    </div>
 
-      resultadosOrdenados.length > 0 
-        ? React.createElement('div', { className: "overflow-x-auto" },
-            React.createElement('table', { className: "table w-full table-compact" },
-              React.createElement('thead', null,
-                React.createElement('tr', null,
-                  React.createElement('th', { onClick: () => handleOrdenar('nombre') }, "Nombre"),
-                  React.createElement('th', { onClick: () => handleOrdenar('categoria') }, "Categoría"),
-                  React.createElement('th', { onClick: () => handleOrdenar('kcal') }, "Calorías (kcal)"),
-                  React.createElement('th', { onClick: () => handleOrdenar('proteinas') }, "Proteínas (g)"),
-                  // Añade más columnas según sea necesario
-                )
-              ),
-              React.createElement('tbody', null,
-                resultadosOrdenados.map((alimento, index) => 
-                  React.createElement('tr', { key: index },
-                    React.createElement('td', null, alimento.nombre),
-                    React.createElement('td', null, alimento.categoria),
-                    React.createElement('td', { className: "text-center" }, alimento.kcal.toFixed(1)),
-                    React.createElement('td', { className: "text-center" }, alimento.proteinas.toFixed(1))
-                    // Añade más celdas según sea necesario
-                  )
-                )
-              )
-            )
-          )
-        : React.createElement('p', null, "No se encontraron alimentos")
-    )
-  );
-}
+    <script>
+        // Base de datos de alimentos
+        const alimentos = [
+            {
+                "categoria": "Carnes",
+                "nombre": "Carne de Hamburguesa", 
+                "kcal": 240, 
+                "proteinas": 19.17, 
+                "hidratos": 0.5, 
+                "grasas": 18.33, 
+                "fibra": 0,
+                "calcio": 22,
+                "hierro": 2.7,
+                "magnesio": 20,
+                "potasio": 315,
+                "vitamina_a": 0,
+                "vitamina_c": 0,
+                "vitamina_d": 0,
+                "vitamina_e": 0.4,
+                "folato": 8,
+                "vitamina_b12": 2.5
+            },
+            { 
+                "categoria": "Carnes",
+                "nombre": "Entrecot de Ternera", 
+                "kcal": 250, 
+                "proteinas": 25, 
+                "hidratos": 0, 
+                "grasas": 16, 
+                "fibra": 0,
+                "calcio": 20,
+                "hierro": 2.9,
+                "magnesio": 23,
+                "potasio": 330,
+                "vitamina_a": 0,
+                "vitamina_c": 0,
+                "vitamina_d": 0,
+                "vitamina_e": 0.3,
+                "folato": 9,
+                "vitamina_b12": 2.8
+            },
+            { 
+                "categoria": "Carnes",
+                "nombre": "Filete de Ternera (magro)", 
+                "kcal": 131, 
+                "proteinas": 22, 
+                "hidratos": 0, 
+                "grasas": 4.5, 
+                "fibra": 0,
+                "calcio": 12,
+                "hierro": 2.1,
+                "magnesio": 22,
+                "potasio": 340,
+                "vitamina_a": 0,
+                "vitamina_c": 0,
+                "vitamina_d": 0,
+                "vitamina_e": 0.3,
+                "folato": 10,
+                "vitamina_b12": 2
+            },
+            { 
+                "categoria": "Carnes",
+                "nombre": "Lomo de Cerdo (magro)", 
+                "kcal": 143, 
+                "proteinas": 22, 
+                "hidratos": 0, 
+                "grasas": 5.5, 
+                "fibra": 0,
+                "calcio": 19,
+                "hierro": 1,
+                "magnesio": 27,
+                "potasio": 380,
+                "vitamina_a": 0,
+                "vitamina_c": 0,
+                "vitamina_d": 0.5,
+                "vitamina_e": 0.2,
+                "folato": 5,
+                "vitamina_b12": 0.7
+            },
+            { 
+                "categoria": "Carnes",
+                "nombre": "Pechuga de Pavo", 
+                "kcal": 104, 
+                "proteinas": 22, 
+                "hidratos": 0, 
+                "grasas": 1.7, 
+                "fibra": 0,
+                "calcio": 13,
+                "hierro": 1,
+                "magnesio": 30,
+                "potasio": 290,
+                "vitamina_a": 0,
+                "vitamina_c": 0,
+                "vitamina_d": 0,
+                "vitamina_e": 0.1,
+                "folato": 7,
+                "vitamina_b12": 0.6
+            },
+            { 
+                "categoria": "Carnes",
+                "nombre": "Pechuga de Pollo", 
+                "kcal": 165, 
+                "proteinas": 31, 
+                "hidratos": 0, 
+                "grasas": 3.6, 
+                "fibra": 0,
+                "calcio": 15,
+                "hierro": 1,
+                "magnesio": 29,
+                "potasio": 256,
+                "vitamina_a": 6,
+                "vitamina_c": 0,
+                "vitamina_d": 0,
+                "vitamina_e": 0.3,
+                "folato": 4,
+                "vitamina_b12": 0.3
+            },
+            { 
+                "categoria": "Pescados y mariscos",
+                "nombre": "Anchoas (frescas)", 
+                "kcal": 190, 
+                "proteinas": 20, 
+                "hidratos": 0, 
+                "grasas": 13, 
+                "fibra": 0,
+                "calcio": 147,
+                "hierro": 2.9,
+                "magnesio": 41,
+                "potasio": 383,
+                "vitamina_a": 50,
+                "vitamina_c": 0,
+                "vitamina_d": 1,
+                "vitamina_e": 1,
+                "folato": 9,
+                "vitamina_b12": 0.9
+            },
+            { 
+                "categoria": "Pescados y mariscos",
+                "nombre": "Atún (en agua, escurrido)", 
+                "kcal": 128, 
+                "proteinas": 29, 
+                "hidratos": 0, 
+                "grasas": 1, 
+                "fibra": 0,
+                "calcio": 17,
+                "hierro": 1.6,
+                "magnesio": 27,
+                "potasio": 237,
+                "vitamina_a": 17,
+                "vitamina_c": 0,
+                "vitamina_d": 2,
+                "vitamina_e": 0.3,
+                "folato": 4,
+                "vitamina_b12": 2.5
+            },
+            { 
+                "categoria": "Pescados y mariscos",
+                "nombre": "Bacalao (fresco)", 
+                "kcal": 82, 
+                "proteinas": 18, 
+                "hidratos": 0, 
+                "grasas": 0.7, 
+                "fibra": 0,
+                "calcio": 16,
+                "hierro": 0.4,
+                "magnesio": 32,
+                "potasio": 413,
+                "vitamina_a": 12,
+                "vitamina_c": 1,
+                "vitamina_d": 0.9,
+                "vitamina_e": 0.6,
+                "folato": 7,
+                "vitamina_b12": 0.9
+            },
+            { 
+                "categoria": "Frutas",
+                "nombre": "Manzana", 
+                "kcal": 52, 
+                "proteinas": 0.3, 
+                "hidratos": 14, 
+                "grasas": 0.2, 
+                "fibra": 2.4,
+                "calcio": 6,
+                "hierro": 0.1,
+                "magnesio": 6,
+                "potasio": 108,
+                "vitamina_a": 3,
+                "vitamina_c": 4.6,
+                "vitamina_d": 0,
+                "vitamina_e": 0.2,
+                "folato": 3,
+                "vitamina_b12": 0
+            },
+            { 
+                "categoria": "Frutas",
+                "nombre": "Plátano", 
+                "kcal": 89, 
+                "proteinas": 1.1, 
+                "hidratos": 23, 
+                "grasas": 0.3, 
+                "fibra": 2.6,
+                "calcio": 5,
+                "hierro": 0.3,
+                "magnesio": 27,
+                "potasio": 358,
+                "vitamina_a": 3,
+                "vitamina_c": 8.7,
+                "vitamina_d": 0,
+                "vitamina_e": 0.1,
+                "folato": 20,
+                "vitamina_b12": 0
+            },
+            { 
+                "categoria": "Verduras",
+                "nombre": "Zanahoria", 
+                "kcal": 41, 
+                "proteinas": 0.9, 
+                "hidratos": 9.6, 
+                "grasas": 0.2, 
+                "fibra": 2.8,
+                "calcio": 33,
+                "hierro": 0.3,
+                "magnesio": 12,
+                "potasio": 320,
+                "vitamina_a": 835,
+                "vitamina_c": 5.9,
+                "vitamina_d": 0,
+                "vitamina_e": 0.7,
+                "folato": 19,
+                "vitamina_b12": 0
+            },
+            { 
+                "categoria": "Verduras",
+                "nombre": "Brócoli", 
+                "kcal": 35, 
+                "proteinas": 2.5, 
+                "hidratos": 7.1, 
+                "grasas": 0.4, 
+                "fibra": 3.3,
+                "calcio": 47,
+                "hierro": 0.7,
+                "magnesio": 21,
+                "potasio": 316,
+                "vitamina_a": 31,
+                "vitamina_c": 89.2,
+                "vitamina_d": 0,
+                "vitamina_e": 0.8,
+                "folato": 63,
+                "vitamina_b12": 0
+            },
+            { 
+                "categoria": "Cereales y derivados",
+                "nombre": "Arroz Blanco", 
+                "kcal": 130, 
+                "proteinas": 2.7, 
+                "hidratos": 28.1, 
+                "grasas": 0.3, 
+                "fibra": 0.4,
+                "calcio": 10,
+                "hierro": 0.8,
+                "magnesio": 12,
+                "potasio": 35,
+                "vitamina_a": 0,
+                "vitamina_c": 0,
+                "vitamina_d": 0,
+                "vitamina_e": 0,
+                "folato": 58,
+                "vitamina_b12": 0
+            },
+            { 
+                "categoria": "Cereales y derivados",
+                "nombre": "Avena (en copos, cruda)", 
+                "kcal": 350, 
+                "proteinas": 13, 
+                "hidratos": 58, 
+                "grasas": 7, 
+                "fibra": 9,
+                "calcio": 54,
+                "hierro": 4.7,
+                "magnesio": 177,
+                "potasio": 429,
+                "vitamina_a": 0,
+                "vitamina_c": 0,
+                "vitamina_d": 0,
+                "vitamina_e": 0.7,
+                "folato": 56,
+                "vitamina_b12": 0
+            },
+            { 
+                "categoria": "Legumbres",
+                "nombre": "Lentejas (cocidas)", 
+                "kcal": 116, 
+                "proteinas": 9, 
+                "hidratos": 20, 
+                "grasas": 0.4, 
+                "fibra": 7.9,
+                "calcio": 19,
+                "hierro": 3.3,
+                "magnesio": 36,
+                "potasio": 369,
+                "vitamina_a": 2,
+                "vitamina_c": 1.5,
+                "vitamina_d": 0,
+                "vitamina_e": 0.1,
+                "folato": 181,
+                "vitamina_b12": 0
+            },
+            { 
+                "categoria": "Frutos secos y semillas",
+                "nombre": "Almendras", 
+                "kcal": 600, 
+                "proteinas": 21, 
+                "hidratos": 21, 
+                "grasas": 50, 
+                "fibra": 13,
+                "calcio": 269,
+                "hierro": 3.7,
+                "magnesio": 270,
+                "potasio": 733,
+                "vitamina_a": 0,
+                "vitamina_c": 0,
+                "vitamina_d": 0,
+                "vitamina_e": 25.6,
+                "folato": 44,
+                "vitamina_b12": 0
+            },
+            { 
+                "categoria": "Lácteos y alternativas",
+                "nombre": "Leche Entera", 
+                "kcal": 61, 
+                "proteinas": 3.2, 
+                "hidratos": 4.8, 
+                "grasas": 3.3, 
+                "fibra": 0,
+                "calcio": 125,
+                "hierro": 0.03,
+                "magnesio": 13,
+                "potasio": 150,
+                "vitamina_a": 46,
+                "vitamina_c": 0,
+                "vitamina_d": 1,
+                "vitamina_e": 0.1,
+                "folato": 5,
+                "vitamina_b12": 0.5
+            },
+            { 
+                "categoria": "Huevos",
+                "nombre": "Huevo Completo", 
+                "kcal": 143, 
+                "proteinas": 12.7, 
+                "hidratos": 1.1, 
+                "grasas": 9.5, 
+                "fibra": 0,
+                "calcio": 56,
+                "hierro": 1.8,
+                "magnesio": 12,
+                "potasio": 138,
+                "vitamina_a": 160,
+                "vitamina_c": 0,
+                "vitamina_d": 2,
+                "vitamina_e": 1,
+                "folato": 47,
+                "vitamina_b12": 0.9
+            },
+            { 
+                "categoria": "Bebidas",
+                "nombre": "Café Solo", 
+                "kcal": 2, 
+                "proteinas": 0.1, 
+                "hidratos": 0.2, 
+                "grasas": 0, 
+                "fibra": 0,
+                "calcio": 2,
+                "hierro": 0.01,
+                "magnesio": 3,
+                "potasio": 49,
+                "vitamina_a": 0,
+                "vitamina_c": 0,
+                "vitamina_d": 0,
+                "vitamina_e": 0,
+                "folato": 0,
+                "vitamina_b12": 0
+            }
+        ];
 
-export default BuscadorAlimentos;
+        // Definir los tipos de nutrientes
+        const macronutrientes = [
+            { campo: "kcal", nombre: "Calorías (kcal)" },
+            { campo: "proteinas", nombre: "Proteínas (g)" },
+            { campo: "hidratos", nombre: "Hidratos (g)" },
+            { campo: "grasas", nombre: "Grasas (g)" },
+            { campo: "fibra", nombre: "Fibra (g)" }
+        ];
+
+        const micronutrientes = [
+            { campo: "calcio", nombre: "Calcio (mg)" },
+            { campo: "hierro", nombre: "Hierro (mg)" },
+            { campo: "magnesio", nombre: "Magnesio (mg)" },
+            { campo: "potasio", nombre: "Potasio (mg)" },
+            { campo: "vitamina_a", nombre: "Vitamina A (µg)" },
+            { campo: "vitamina_c", nombre: "Vitamina C (mg)" },
+            { campo: "vitamina_d", nombre: "Vitamina D (µg)" },
+            { campo: "vitamina_e", nombre: "Vitamina E (mg)" },
+            { campo: "folato", nombre: "Folato (µg)" },
+            { campo: "vitamina_b12", nombre: "Vitamina B12 (µg)" }
+        ];
+
+        // Obtener categorías únicas
+        const categorias = [...new Set(alimentos.map(item => item.categoria))].sort();
+
+        // Cargar las categorías en el selector
+        const categorySelect = document.getElementById('categorySelect');
+        categorias.forEach(categoria => {
+            const option = document.createElement('option');
+            option.value = categoria;
+            option.textContent = categoria;
+            categorySelect.appendChild(option);
+        });
+
+        // Organizar alimentos por categoría
+        function organizarPorCategoria(items) {
+            const porCategoria = {};
+            items.forEach(item => {
+                if (!porCategoria[item.categoria]) {
+                    porCategoria[item.categoria] = [];
+                }
+                porCategoria[item.categoria].push(item);
+            });
+            return porCategoria;
+        }
+
+        // Función para crear el encabezado de una tabla
+        function crearEncabezado(tipo) {
+            const thead = document.createElement('thead');
+            const tr = document.createElement('tr');
+            
+            const thNombre = document.createElement('th');
+            thNombre.textContent = 'Nombre';
+            tr.appendChild(thNombre);
+            
+            const nutrientes = tipo === 'macro' ? macronutrientes : micronutrientes;
+            
+            nutrientes.forEach(nutriente => {
+                const th = document.createElement('th');
+                th.textContent = nutriente.nombre;
+                th.dataset.campo = nutriente.campo;
+                th.addEventListener('click', () => ordenarTabla(th, tipo));
+                tr.appendChild(th);
+            });
+            
+            thead.appendChild(tr);
+            return thead;
+        }
+
+        // Variable para controlar el ordenamiento
+        let ordenActual = { campo: null, direccion: 'asc' };
+
+        // Función para ordenar una tabla
+        function ordenarTabla(th, tipo) {
+            const campo = th.dataset.campo;
+            const tabla = th.closest('table');
+            const tbody = tabla.querySelector('tbody');
+            const filas = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Cambiar dirección si es el mismo campo
+            if (ordenActual.campo === campo) {
+                ordenActual.direccion = ordenActual.direccion === 'asc' ? 'desc' : 'asc';
+            } else {
+                ordenActual.campo = campo;
+                ordenActual.direccion = 'asc';
+            }
+            
+            // Remover clases de ordenamiento de todos los encabezados
+            tabla.querySelectorAll('th').forEach(header => {
+                header.classList.remove('sorted-asc', 'sorted-desc');
+            });
+            
+            // Añadir clase de ordenamiento al encabezado actual
+            th.classList.add(ordenActual.direccion === 'asc' ? 'sorted-asc' : 'sorted-desc');
+            
+            // Ordenar filas
+            filas.sort((a, b) => {
+                const valorA = parseFloat(a.querySelector(`td[data-campo="${campo}"]`).textContent);
+                const valorB = parseFloat(b.querySelector(`td[data-campo="${campo}"]`).textContent);
+                
+                return ordenActual.direccion === 'asc' 
+                    ? valorA - valorB 
+                    : valorB - valorA;
+            });
+            
+            // Reordenar filas en el tbody
+            filas.forEach(fila => tbody.appendChild(fila));
+        }
+
+        // Función para crear filas de una tabla
+        function crearFilas(items, tipo) {
+            const tbody = document.createElement('tbody');
+            const nutrientes = tipo === 'macro' ? macronutrientes : micronutrientes;
+            
+            items.forEach(item => {
+                const tr = document.createElement('tr');
+                
+                const tdNombre = document.createElement('td');
+                tdNombre.textContent = item.nombre;
+                tr.appendChild(tdNombre);
+                
+                nutrientes.forEach(nutriente => {
+                    const td = document.createElement('td');
+                    td.textContent = item[nutriente.campo].toFixed(1);
+                    td.dataset.campo = nutriente.campo;
+                    tr.appendChild(td);
+                });
+                
+                tbody.appendChild(tr);
+            });
+            
+            return tbody;
+        }
+
+        // Función para mostrar los alimentos
+        function mostrarAlimentos(alimentosFiltrados = alimentos) {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = '';
+            
+            if (alimentosFiltrados.length === 0) {
+                contentDiv.innerHTML = '<div class="no-results">No se encontraron alimentos que coincidan con la búsqueda</div>';
+                return;
+            }
+            
+            const porCategoria = organizarPorCategoria(alimentosFiltrados);
+            
+            Object.keys(porCategoria).sort().forEach(categoria => {
+                const seccion = document.createElement('div');
+                seccion.className = 'category-section';
+                
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.innerHTML = `${categoria} <span>(${porCategoria[categoria].length} alimentos)</span> <span class="arrow">▼</span>`;
+                header.addEventListener('click', () => {
+                    const content = seccion.querySelector('.category-content');
+                    content.classList.toggle('active');
+                    const arrow = header.querySelector('.arrow');
+                    arrow.textContent = content.classList.contains('active') ? '▲' : '▼';
+                });
+                
+                const content = document.createElement('div');
+                content.className = 'category-content';
+                
+                // Pestañas para macro y micronutrientes
+                const tabContainer = document.createElement('div');
+                tabContainer.className = 'tab-container';
+                
+                const macroTab = document.createElement('div');
+                macroTab.className = 'tab active';
+                macroTab.textContent = 'Macronutrientes';
+                macroTab.addEventListener('click', () => {
+                    macroTab.classList.add('active');
+                    microTab.classList.remove('active');
+                    macroContent.classList.add('active');
+                    microContent.classList.remove('active');
+                });
+                
+                const microTab = document.createElement('div');
+                microTab.className = 'tab';
+                microTab.textContent = 'Micronutrientes';
+                microTab.addEventListener('click', () => {
+                    microTab.classList.add('active');
+                    macroTab.classList.remove('active');
+                    microContent.classList.add('active');
+                    macroContent.classList.remove('active');
+                });
+                
+                tabContainer.appendChild(macroTab);
+                tabContainer.appendChild(microTab);
+                
+                // Contenido de pestañas
+                const macroContent = document.createElement('div');
+                macroContent.className = 'tab-content active';
+                
+                const microContent = document.createElement('div');
+                microContent.className = 'tab-content';
+                
+                // Tabla de macronutrientes
+                const macroTable = document.createElement('table');
+                macroTable.appendChild(crearEncabezado('macro'));
+                macroTable.appendChild(crearFilas(porCategoria[categoria], 'macro'));
+                
+                // Tabla de micronutrientes
+                const microTable = document.createElement('table');
+                microTable.appendChild(crearEncabezado('micro'));
+                microTable.appendChild(crearFilas(porCategoria[categoria], 'micro'));
+                
+                macroContent.appendChild(macroTable);
+                microContent.appendChild(microTable);
+                
+                content.appendChild(tabContainer);
+                content.appendChild(macroContent);
+                content.appendChild(microContent);
+                
+                seccion.appendChild(header);
+                seccion.appendChild(content);
+                
+                contentDiv.appendChild(seccion);
+            });
+        }
+
+        // Función de búsqueda
+        function buscar() {
+            const termino = document.getElementById('searchBox').value.toLowerCase();
+            const categoriaSeleccionada = document.getElementById('categorySelect').value;
+            
+            const alimentosFiltrados = alimentos.filter(alimento => {
+                const coincideName = alimento.nombre.toLowerCase().includes(termino);
+                const coincideCategoria = categoriaSeleccionada === '' || alimento.categoria === categoriaSeleccionada;
+                return coincideName && coincideCategoria;
+            });
+            
+            mostrarAlimentos(alimentosFiltrados);
+        }
+
+        // Asignar eventos
+        document.getElementById('searchBtn').addEventListener('click', buscar);
+        document.getElementById('searchBox').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                buscar();
+            }
+        });
+        document.getElementById('categorySelect').addEventListener('change', buscar);
+
+        // Mostrar todos los alimentos al cargar
+        mostrarAlimentos();
+
+        // Expandir la primera categoría automáticamente
+        setTimeout(() => {
+            const primeraCategoria = document.querySelector('.category-header');
+            if (primeraCategoria) {
+                primeraCategoria.click();
+            }
+        }, 500);
+    </script>
+</body>
+</html>
