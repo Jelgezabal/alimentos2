@@ -1,0 +1,190 @@
+import React, { useState, useMemo } from 'react';
+
+// Definición de tipos
+const Alimento = {
+  categoria: '',
+  nombre: '',
+  kcal: 0,
+  proteinas: 0,
+  hidratos: 0,
+  grasas: 0,
+  fibra: 0,
+  calcio: 0,
+  hierro: 0,
+  magnesio: 0,
+  potasio: 0,
+  vitamina_a: 0,
+  vitamina_c: 0,
+  vitamina_d: 0,
+  vitamina_e: 0,
+  folato: 0,
+  vitamina_b12: 0,
+  notas: ''
+};
+
+// Base de datos de alimentos
+const alimentos = [
+  {
+    categoria: "Carnes",
+    nombre: "Carne de Hamburguesa",
+    kcal: 240,
+    proteinas: 19.17,
+    hidratos: 0.5,
+    grasas: 18.33,
+    fibra: 0,
+    calcio: 22,
+    hierro: 2.7,
+    magnesio: 20,
+    potasio: 315,
+    vitamina_a: 0,
+    vitamina_c: 0,
+    vitamina_d: 0,
+    vitamina_e: 0.4,
+    folato: 8,
+    vitamina_b12: 2.5,
+    notas: ''
+  },
+  {
+    categoria: "Carnes",
+    nombre: "Entrecot de Ternera",
+    kcal: 250,
+    proteinas: 25,
+    hidratos: 0,
+    grasas: 16,
+    fibra: 0,
+    calcio: 20,
+    hierro: 2.9,
+    magnesio: 23,
+    potasio: 330,
+    vitamina_a: 0,
+    vitamina_c: 0,
+    vitamina_d: 0,
+    vitamina_e: 0.3,
+    folato: 9,
+    vitamina_b12: 2.8,
+    notas: ''
+  }
+];
+
+function BuscadorAlimentos() {
+  const [terminoBusqueda, setTerminoBusqueda] = useState('');
+  const [categoria, setCategoria] = useState('');
+  const [resultados, setResultados] = useState(alimentos);
+  const [ordenamiento, setOrdenamiento] = useState({ 
+    columna: null, 
+    direccion: 'asc' 
+  });
+
+  // Función de búsqueda
+  const buscarAlimentos = (terminoBusqueda, categoria, resultados) => {
+    return resultados.filter(alimento => 
+      (terminoBusqueda === '' || alimento.nombre.toLowerCase().includes(terminoBusqueda.toLowerCase())) &&
+      (categoria === '' || alimento.categoria.toLowerCase() === categoria.toLowerCase())
+    );
+  };
+
+  // Obtener categorías únicas
+  const categorias = Array.from(new Set(alimentos.map(a => a.categoria)));
+
+  // Función de ordenamiento
+  const resultadosOrdenados = useMemo(() => {
+    if (!ordenamiento.columna) return resultados;
+
+    return [...resultados].sort((a, b) => {
+      const valorA = a[ordenamiento.columna];
+      const valorB = b[ordenamiento.columna];
+
+      // Manejo de ordenamiento para strings
+      if (typeof valorA === 'string' && typeof valorB === 'string') {
+        return ordenamiento.direccion === 'asc'
+          ? valorA.localeCompare(valorB)
+          : valorB.localeCompare(valorA);
+      }
+
+      // Manejo de ordenamiento para números
+      if (typeof valorA === 'number' && typeof valorB === 'number') {
+        return ordenamiento.direccion === 'asc' 
+          ? valorA - valorB 
+          : valorB - valorA;
+      }
+
+      return 0;
+    });
+  }, [resultados, ordenamiento]);
+
+  // Función para manejar el ordenamiento
+  const handleOrdenar = (columna) => {
+    setOrdenamiento(prev => ({
+      columna,
+      direccion: prev.columna === columna && prev.direccion === 'asc' 
+        ? 'desc' 
+        : 'asc'
+    }));
+  };
+
+  const handleBuscar = () => {
+    const resultadosFiltrados = buscarAlimentos(terminoBusqueda, categoria, alimentos);
+    setResultados(resultadosFiltrados);
+  };
+
+  return (
+    React.createElement('div', { className: "container mx-auto p-4" },
+      React.createElement('h1', { className: "text-2xl font-bold mb-4" }, "Buscador de Alimentos"),
+      
+      React.createElement('div', { className: "flex space-x-2 mb-4" },
+        React.createElement('input', {
+          type: "text",
+          value: terminoBusqueda,
+          onChange: (e) => setTerminoBusqueda(e.target.value),
+          placeholder: "Buscar alimento",
+          className: "input input-bordered w-full max-w-xs"
+        }),
+        
+        React.createElement('select', {
+          value: categoria,
+          onChange: (e) => setCategoria(e.target.value),
+          className: "select select-bordered w-full max-w-xs"
+        },
+          React.createElement('option', { value: "" }, "Todas las categorías"),
+          categorias.map((cat, index) => 
+            React.createElement('option', { key: index, value: cat }, cat)
+          )
+        ),
+        
+        React.createElement('button', {
+          onClick: handleBuscar,
+          className: "btn btn-primary"
+        }, "Buscar")
+      ),
+
+      resultadosOrdenados.length > 0 
+        ? React.createElement('div', { className: "overflow-x-auto" },
+            React.createElement('table', { className: "table w-full table-compact" },
+              React.createElement('thead', null,
+                React.createElement('tr', null,
+                  React.createElement('th', { onClick: () => handleOrdenar('nombre') }, "Nombre"),
+                  React.createElement('th', { onClick: () => handleOrdenar('categoria') }, "Categoría"),
+                  React.createElement('th', { onClick: () => handleOrdenar('kcal') }, "Calorías (kcal)"),
+                  React.createElement('th', { onClick: () => handleOrdenar('proteinas') }, "Proteínas (g)"),
+                  // Añade más columnas según sea necesario
+                )
+              ),
+              React.createElement('tbody', null,
+                resultadosOrdenados.map((alimento, index) => 
+                  React.createElement('tr', { key: index },
+                    React.createElement('td', null, alimento.nombre),
+                    React.createElement('td', null, alimento.categoria),
+                    React.createElement('td', { className: "text-center" }, alimento.kcal.toFixed(1)),
+                    React.createElement('td', { className: "text-center" }, alimento.proteinas.toFixed(1))
+                    // Añade más celdas según sea necesario
+                  )
+                )
+              )
+            )
+          )
+        : React.createElement('p', null, "No se encontraron alimentos")
+    )
+  );
+}
+
+export default BuscadorAlimentos;
