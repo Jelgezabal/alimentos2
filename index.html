@@ -154,19 +154,26 @@
             white-space: nowrap;
         }
         
-        .sort-arrow {
-            display: none;
+        .sort-pill {
             font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 15px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            cursor: pointer;
         }
         
-        .sort-button.asc .sort-arrow.up,
-        .sort-button.desc .sort-arrow.down {
-            display: inline;
-        }
-        
-        .sort-button.asc, .sort-button.desc {
+        .sort-pill.asc, .sort-pill.desc {
             background-color: #e8f5e9;
             border-color: #a5d6a7;
+        }
+        
+        .sort-pill.asc:after {
+            content: " ▲";
+        }
+        
+        .sort-pill.desc:after {
+            content: " ▼";
         }
         
         .empty-state {
@@ -192,28 +199,6 @@
             display: flex;
             flex-wrap: wrap;
             gap: 5px;
-        }
-        
-        .sort-pill {
-            font-size: 0.8rem;
-            padding: 5px 10px;
-            border-radius: 15px;
-            background: #f0f0f0;
-            border: 1px solid #ddd;
-            cursor: pointer;
-        }
-        
-        .sort-pill.asc, .sort-pill.desc {
-            background-color: #e8f5e9;
-            border-color: #a5d6a7;
-        }
-        
-        .sort-pill.asc:after {
-            content: " ▲";
-        }
-        
-        .sort-pill.desc:after {
-            content: " ▼";
         }
         
         .error-message {
@@ -255,7 +240,7 @@
     </div>
     
     <div id="errorMessage" class="error-message" style="display: none;">
-        Error al cargar los datos. Intentando usar datos locales.
+        Error al cargar los datos. Usando datos locales.
     </div>
     
     <div class="controls" style="display: none;" id="controlsContainer">
@@ -306,34 +291,15 @@
     </div>
 
     <script>
-        // Lista de respaldo de alimentos en caso de que falle la carga desde Google Sheets
-        const alimentosRespaldo = [
-            {
-                "categoria": "Carnes",
-                "nombre": "Pechuga de Pollo", 
-                "kcal": 165, 
-                "proteinas": 31, 
-                "hidratos": 0, 
-                "grasas": 3.6, 
-                "fibra": 0,
-                "calcio": 15,
-                "hierro": 1.0,
-                "magnesio": 29,
-                "potasio": 256,
-                "vitamina_a": 6,
-                "vitamina_c": 0,
-                "vitamina_d": 0,
-                "vitamina_e": 0.3,
-                "folato": 4,
-                "vitamina_b12": 0.3
-            },
+        // Datos predefinidos de alimentos
+        const alimentosLocal = [
             {
                 "categoria": "Carnes",
                 "nombre": "Carne de Hamburguesa", 
                 "kcal": 240, 
-                "proteinas": 19, 
+                "proteinas": 19.17, 
                 "hidratos": 0.5, 
-                "grasas": 18, 
+                "grasas": 18.33, 
                 "fibra": 0,
                 "calcio": 22,
                 "hierro": 2.7,
@@ -344,9 +310,70 @@
                 "vitamina_d": 0,
                 "vitamina_e": 0.4,
                 "folato": 8,
-                "vitamina_b12": 2.5
+                "vitamina_b12": 2.5,
+                "notas": ''
             },
-            {
+            { 
+                "categoria": "Carnes",
+                "nombre": "Entrecot de Ternera", 
+                "kcal": 250, 
+                "proteinas": 25, 
+                "hidratos": 0, 
+                "grasas": 16, 
+                "fibra": 0,
+                "calcio": 20,
+                "hierro": 2.9,
+                "magnesio": 23,
+                "potasio": 330,
+                "vitamina_a": 0,
+                "vitamina_c": 0,
+                "vitamina_d": 0,
+                "vitamina_e": 0.3,
+                "folato": 9,
+                "vitamina_b12": 2.8,
+                "notas": ''
+            },
+            { 
+                "categoria": "Carnes",
+                "nombre": "Filete de Ternera (magro)", 
+                "kcal": 131, 
+                "proteinas": 22, 
+                "hidratos": 0, 
+                "grasas": 4.5, 
+                "fibra": 0,
+                "calcio": 12,
+                "hierro": 2.1,
+                "magnesio": 22,
+                "potasio": 340,
+                "vitamina_a": 0,
+                "vitamina_c": 0,
+                "vitamina_d": 0,
+                "vitamina_e": 0.3,
+                "folato": 10,
+                "vitamina_b12": 2,
+                "notas": ''
+            },
+            { 
+                "categoria": "Pescados y mariscos",
+                "nombre": "Salmón", 
+                "kcal": 206, 
+                "proteinas": 22, 
+                "hidratos": 0, 
+                "grasas": 13, 
+                "fibra": 0,
+                "calcio": 12,
+                "hierro": 0.8,
+                "magnesio": 29,
+                "potasio": 490,
+                "vitamina_a": 40,
+                "vitamina_c": 0,
+                "vitamina_d": 11,
+                "vitamina_e": 1,
+                "folato": 25,
+                "vitamina_b12": 3.2,
+                "notas": ''
+            },
+            { 
                 "categoria": "Frutas",
                 "nombre": "Manzana", 
                 "kcal": 52, 
@@ -363,12 +390,134 @@
                 "vitamina_d": 0,
                 "vitamina_e": 0.2,
                 "folato": 3,
-                "vitamina_b12": 0
+                "vitamina_b12": 0,
+                "notas": ''
+            },
+            { 
+                "categoria": "Lácteos y alternativas",
+                "nombre": "Yogur Natural (sin azúcar)", 
+                "kcal": 61, 
+                "proteinas": 3.5, 
+                "hidratos": 4.7, 
+                "grasas": 3.3, 
+                "fibra": 0,
+                "calcio": 121,
+                "hierro": 0.05,
+                "magnesio": 12,
+                "potasio": 155,
+                "vitamina_a": 30,
+                "vitamina_c": 0.5,
+                "vitamina_d": 0,
+                "vitamina_e": 0,
+                "folato": 7,
+                "vitamina_b12": 0.4,
+                "notas": ''
             }
         ];
 
-        // URL de la hoja de Google Sheets (publicada como CSV)
-        const GOOGLE_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQKSQtnyZS6OMWxJJ6L3eNa1tt7gVlmIvYMcTBie4jSuh-G5ALEnlQNSDQpSWExF72VI4IVNMSetqNK/pub?output=csv";
+        // Definición manual de los datos (simulando que vienen de la hoja)
+        const alimentosGoogleSheets = [
+            {
+                "categoria": "Carnes",
+                "nombre": "Carne de Hamburguesa", 
+                "kcal": 240, 
+                "proteinas": 19.17, 
+                "hidratos": 0.5, 
+                "grasas": 18.33, 
+                "fibra": 0,
+                "calcio": 22,
+                "hierro": 2.7,
+                "magnesio": 20,
+                "potasio": 315,
+                "vitamina_a": 0,
+                "vitamina_c": 0,
+                "vitamina_d": 0,
+                "vitamina_e": 0.4,
+                "folato": 8,
+                "vitamina_b12": 2.5,
+                "notas": ''
+            },
+            { 
+                "categoria": "Carnes",
+                "nombre": "Entrecot de Ternera", 
+                "kcal": 250, 
+                "proteinas": 25, 
+                "hidratos": 0, 
+                "grasas": 16, 
+                "fibra": 0,
+                "calcio": 20,
+                "hierro": 2.9,
+                "magnesio": 23,
+                "potasio": 330,
+                "vitamina_a": 0,
+                "vitamina_c": 0,
+                "vitamina_d": 0,
+                "vitamina_e": 0.3,
+                "folato": 9,
+                "vitamina_b12": 2.8,
+                "notas": ''
+            },
+            { 
+                "categoria": "Carnes",
+                "nombre": "Filete de Ternera (magro)", 
+                "kcal": 131, 
+                "proteinas": 22, 
+                "hidratos": 0, 
+                "grasas": 4.5, 
+                "fibra": 0,
+                "calcio": 12,
+                "hierro": 2.1,
+                "magnesio": 22,
+                "potasio": 340,
+                "vitamina_a": 0,
+                "vitamina_c": 0,
+                "vitamina_d": 0,
+                "vitamina_e": 0.3,
+                "folato": 10,
+                "vitamina_b12": 2,
+                "notas": ''
+            },
+            { 
+                "categoria": "Carnes",
+                "nombre": "Lomo de Cerdo (magro)", 
+                "kcal": 143, 
+                "proteinas": 22, 
+                "hidratos": 0, 
+                "grasas": 5.5, 
+                "fibra": 0,
+                "calcio": 19,
+                "hierro": 1,
+                "magnesio": 27,
+                "potasio": 380,
+                "vitamina_a": 0,
+                "vitamina_c": 0,
+                "vitamina_d": 0.5,
+                "vitamina_e": 0.2,
+                "folato": 5,
+                "vitamina_b12": 0.7,
+                "notas": ''
+            },
+            { 
+                "categoria": "Carnes",
+                "nombre": "Pechuga de Pavo", 
+                "kcal": 104, 
+                "proteinas": 22, 
+                "hidratos": 0, 
+                "grasas": 1.7, 
+                "fibra": 0,
+                "calcio": 13,
+                "hierro": 1,
+                "magnesio": 30,
+                "potasio": 290,
+                "vitamina_a": 0,
+                "vitamina_c": 0,
+                "vitamina_d": 0,
+                "vitamina_e": 0.1,
+                "folato": 7,
+                "vitamina_b12": 0.6,
+                "notas": ''
+            }            
+        ];
 
         // Definición de macronutrientes y micronutrientes
         const macronutrientes = [
@@ -401,55 +550,6 @@
                 direccion: "asc"
             }
         };
-
-        // Función para cargar datos desde Google Sheets
-        async function cargarDatosDesdeGoogleSheets() {
-            try {
-                const respuesta = await fetch(GOOGLE_SHEETS_URL);
-                if (!respuesta.ok) {
-                    throw new Error('Error al cargar los datos desde Google Sheets');
-                }
-                
-                const datosCSV = await respuesta.text();
-                const alimentos = procesarCSV(datosCSV);
-                
-                return alimentos;
-            } catch (error) {
-                console.error('Error al cargar datos desde Google Sheets:', error);
-                document.getElementById('errorMessage').style.display = 'block';
-                return alimentosRespaldo;
-            }
-        }
-
-        // Función para procesar los datos CSV
-        function procesarCSV(csv) {
-            const filas = csv.split('\n');
-            const cabeceras = filas[0].split(',').map(h => h.trim());
-            
-            const alimentos = [];
-            
-            for (let i = 1; i < filas.length; i++) {
-                if (!filas[i].trim()) continue;
-                
-                const valores = filas[i].split(',');
-                if (valores.length < cabeceras.length) continue;
-                
-                const alimento = {};
-                
-                cabeceras.forEach((cabecera, index) => {
-                    // Convertir valores a números cuando corresponda
-                    if (['categoria', 'nombre', 'notas'].includes(cabecera)) {
-                        alimento[cabecera] = valores[index].trim();
-                    } else {
-                        alimento[cabecera] = parseFloat(valores[index]) || 0;
-                    }
-                });
-                
-                alimentos.push(alimento);
-            }
-            
-            return alimentos;
-        }
 
         // Función para filtrar alimentos por categoría
         function filtrarPorCategoria(alimentos, categoria) {
@@ -582,8 +682,9 @@
         // Inicializar la aplicación
         document.addEventListener("DOMContentLoaded", async function() {
             try {
-                // Cargar datos desde Google Sheets
-                const alimentos = await cargarDatosDesdeGoogleSheets();
+                // Simular la carga de datos (en este caso usamos datos precargados)
+                // En una implementación real, aquí iría la llamada a la API
+                const alimentos = alimentosGoogleSheets;
                 
                 // Ocultar mensaje de carga y mostrar controles
                 document.getElementById('loadingMessage').style.display = 'none';
@@ -648,8 +749,8 @@
                 document.getElementById('controlsContainer').style.display = 'block';
                 
                 // Usar datos de respaldo
-                cargarCategorias(alimentosRespaldo);
-                mostrarAlimentos(alimentosRespaldo);
+                cargarCategorias(alimentosLocal);
+                mostrarAlimentos(alimentosLocal);
             }
         });
     </script>
